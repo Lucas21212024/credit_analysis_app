@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 from datetime import datetime
 import csv
 import os
@@ -122,7 +122,7 @@ def classificar_risco(pontuacao):
     else:
         return "Recusado"
 
-def salvar_historico(cliente, pontuacao, risco, motivos_positivos, motivos_negativos):
+def salvar_historico(cliente, cnpj, pontuacao, risco, motivos_positivos, motivos_negativos):
     # Verificar se o diretório para o arquivo existe
     os.makedirs('data', exist_ok=True)
     file_path = os.path.join('data', 'historico_analises.csv')
@@ -130,7 +130,7 @@ def salvar_historico(cliente, pontuacao, risco, motivos_positivos, motivos_negat
     # Salvar no arquivo CSV
     with open(file_path, mode='a', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
-        writer.writerow([datetime.now(), cliente, pontuacao, risco, '; '.join(motivos_positivos), '; '.join(motivos_negativos)])
+        writer.writerow([datetime.now(), cliente, cnpj, pontuacao, risco, '; '.join(motivos_positivos), '; '.join(motivos_negativos)])
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -142,6 +142,7 @@ def index():
     if request.method == 'POST':
         # Obter dados do formulário
         cliente = request.form['cliente']
+        cnpj = request.form['cnpj']  # Novo campo CNPJ
         data_abertura = request.form['data_abertura']
         quantidade_socios = int(request.form['quantidade_socios'])
         troca_socios = int(request.form['troca_socios']) == 1  # Convertendo para booleano
@@ -165,7 +166,7 @@ def index():
         risco = classificar_risco(pontuacao)
 
         # Salvar histórico
-        salvar_historico(cliente, pontuacao, risco, motivos_positivos, motivos_negativos)
+        salvar_historico(cliente, cnpj, pontuacao, risco, motivos_positivos, motivos_negativos)
 
     # Renderizar template com resultados
     return render_template('index.html', pontuacao=pontuacao, risco=risco, motivos_positivos=motivos_positivos, motivos_negativos=motivos_negativos)
