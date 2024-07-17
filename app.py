@@ -169,20 +169,29 @@ def index():
     # Renderizar template com resultados
     return render_template('index.html', pontuacao=pontuacao, risco=risco, motivos_positivos=motivos_positivos, motivos_negativos=motivos_negativos)
 
-# Rota para exibir o histórico de análises
 @app.route('/historico')
 def historico():
     historico = []
     arquivo_csv = '/historico_analises.csv'  # Caminho absoluto do arquivo CSV
     try:
-        with open(arquivo_csv, mode='r') as file:
+        with open(arquivo_csv, mode='r', encoding='utf-16') as file:
             reader = csv.reader(file)
             for row in reader:
                 historico.append(row)
     except FileNotFoundError:
         pass  # Se o arquivo não existir, retorna uma lista vazia
-
+    except UnicodeDecodeError:
+        # Se ocorrer erro de decodificação, tentar outra codificação
+        try:
+            with open(arquivo_csv, mode='r', encoding='latin-1') as file:
+                reader = csv.reader(file)
+                for row in reader:
+                    historico.append(row)
+        except Exception as e:
+            print(f"Erro ao ler arquivo CSV: {e}")
+    
     return render_template('historico.html', historico=historico)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
