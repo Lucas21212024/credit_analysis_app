@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 from datetime import datetime
 import csv
 
@@ -163,24 +163,27 @@ def index():
             salvar_historico(cliente, pontuacao, risco, motivos_positivos, motivos_negativos)
 
         except Exception as e:
-            print(f"Erro ao processar o formulário: {e}")
-            # Pode-se adicionar um retorno de erro ou redirecionar para uma página de erro aqui
+            print(f"Erro ao processar formulário: {e}")
+            # Poderia adicionar um retorno de erro específico aqui, dependendo do caso
 
-    # Renderizar template com resultados ou formulário vazio
+    # Renderizar template com resultados
     return render_template('index.html', pontuacao=pontuacao, risco=risco, motivos_positivos=motivos_positivos, motivos_negativos=motivos_negativos)
 
 @app.route('/historico')
 def historico():
     historico = []
     try:
-        with open('historico_analises.csv', mode='r', newline='', encoding='utf-8') as file:
+        with open('historico_analises.csv', mode='r', encoding='utf-8') as file:
             reader = csv.reader(file)
             for row in reader:
                 historico.append(row)
     except FileNotFoundError:
-        pass
+        pass  # Pode adicionar um tratamento específico para arquivo não encontrado
+    except Exception as e:
+        print(f"Erro ao ler histórico: {e}")
+        # Poderia adicionar um retorno de erro específico aqui, dependendo do caso
+
     return render_template('historico.html', historico=historico)
 
 if __name__ == '__main__':
     app.run(debug=True)
-
