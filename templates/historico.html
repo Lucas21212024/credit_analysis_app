@@ -48,6 +48,27 @@
         table tr:hover {
             background-color: #ddd;
         }
+
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .new-consultation-button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            text-decoration: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .new-consultation-button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 
@@ -58,8 +79,8 @@
             <thead>
                 <tr>
                     <th>Data</th>
-                    <th>Cliente</th>
                     <th>CNPJ</th>
+                    <th>Cliente</th>
                     <th>Pontuação</th>
                     <th>Status</th>
                     <th>Pontos Positivos</th>
@@ -69,22 +90,23 @@
             <tbody>
                 {% for analise in historico %}
                 <tr>
-                      <td>{{ analise[0] }}</td>
-                    <td>{{ analise[1] }}</td>
-                    <td>{{ analise[2] }}</td>
-                    <td>{{ analise[3] }}</td>
-                    <td>{{ analise[4] }}</td>
-                    <td>{{ analise[5] }}</td>
-                    <td>{{ analise[6] }}</td>
+                    <td>{{ analise[0] }}</td> <!-- Data -->
+                    <td>{{ analise[1] }}</td> <!-- CNPJ -->
+                    <td>{{ analise[2] }}</td> <!-- Cliente -->
+                    <td>{{ analise[3] }}</td> <!-- Pontuação -->
+                    <td>{{ analise[4] }}</td> <!-- Status -->
+                    <td>{{ analise[5] }}</td> <!-- Pontos Positivos -->
+                    <td>{{ analise[6] }}</td> <!-- Pontos Negativos -->
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+
+        <div class="button-container">
+            <a href="/" class="new-consultation-button">Nova Consulta</a>
+        </div>
     </div>
 </body>
 
 </html>
 
-    </table>
-</body>
-</html>
