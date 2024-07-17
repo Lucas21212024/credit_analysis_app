@@ -126,7 +126,7 @@ def classificar_risco(pontuacao):
 
 # Função para salvar o histórico de análises no arquivo CSV
 def salvar_historico(cliente, pontuacao, risco, motivos_positivos, motivos_negativos):
-    arquivo_csv = os.path.join(app.root_path, 'historico_analises.csv')
+    arquivo_csv = os.path.join(os.getcwd(), 'historico_analises.csv')
     with open(arquivo_csv, mode='a', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([datetime.now(), cliente, pontuacao, risco, '; '.join(motivos_positivos), '; '.join(motivos_negativos)])
@@ -174,8 +174,8 @@ def index():
 @app.route('/historico')
 def historico():
     historico = []
+    arquivo_csv = os.path.join(os.getcwd(), 'historico_analises.csv')
     try:
-        arquivo_csv = os.path.join(app.root_path, 'historico_analises.csv')
         with open(arquivo_csv, mode='r') as file:
             reader = csv.reader(file)
             for row in reader:
