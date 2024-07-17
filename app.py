@@ -1,9 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 from datetime import datetime
 import csv
+import os
 
 app = Flask(__name__)
 
+# Função para calcular a pontuação com base nos critérios fornecidos
 def calcular_pontuacao(data_abertura, quantidade_socios, troca_socios, score_credito, restricao_nome_socios, cheque_devolvido, spc_serasa, protesto, historico_faturamento, historico_atraso, historico_compras, sugestao_limite, valor_compra_desejado):
     pontuacao = 0
     motivos_positivos = []
@@ -113,6 +115,7 @@ def calcular_pontuacao(data_abertura, quantidade_socios, troca_socios, score_cre
 
     return pontuacao, motivos_positivos, motivos_negativos
 
+# Função para classificar o risco com base na pontuação
 def classificar_risco(pontuacao):
     if pontuacao >= 70:
         return "Liberado"
@@ -121,11 +124,14 @@ def classificar_risco(pontuacao):
     else:
         return "Recusado"
 
+# Função para salvar o histórico de análises no arquivo CSV
 def salvar_historico(cliente, pontuacao, risco, motivos_positivos, motivos_negativos):
-    with open('historico_analises.csv', mode='a', newline='') as file:
+    arquivo_csv = os.path.join(app.root_path, 'historico_analises.csv')
+    with open(arquivo_csv, mode='a', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([datetime.now(), cliente, pontuacao, risco, '; '.join(motivos_positivos), '; '.join(motivos_negativos)])
 
+# Rota principal para o formulário de análise de crédito
 @app.route('/', methods=['GET', 'POST'])
 def index():
     pontuacao = None
@@ -164,16 +170,19 @@ def index():
     # Renderizar template com resultados
     return render_template('index.html', pontuacao=pontuacao, risco=risco, motivos_positivos=motivos_positivos, motivos_negativos=motivos_negativos)
 
+# Rota para exibir o histórico de análises
 @app.route('/historico')
 def historico():
     historico = []
     try:
-        with open('historico_analises.csv', mode='r') as file:
+        arquivo_csv = os.path.join(app.root_path, 'historico_analises.csv')
+        with open(arquivo_csv, mode='r') as file:
             reader = csv.reader(file)
             for row in reader:
                 historico.append(row)
     except FileNotFoundError:
-        pass
+        pass  # Se o arquivo não existir, retorna uma lista vazia
+
     return render_template('historico.html', historico=historico)
 
 if __name__ == '__main__':
