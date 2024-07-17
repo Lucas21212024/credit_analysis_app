@@ -1,10 +1,9 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 from datetime import datetime
 import csv
 
 app = Flask(__name__)
 
-# Função para calcular a pontuação com base nos critérios fornecidos
 def calcular_pontuacao(data_abertura, quantidade_socios, troca_socios, score_credito, restricao_nome_socios, cheque_devolvido, spc_serasa, protesto, historico_faturamento, historico_atraso, historico_compras, sugestao_limite, valor_compra_desejado):
     pontuacao = 0
     motivos_positivos = []
@@ -114,7 +113,6 @@ def calcular_pontuacao(data_abertura, quantidade_socios, troca_socios, score_cre
 
     return pontuacao, motivos_positivos, motivos_negativos
 
-# Função para classificar o risco com base na pontuação
 def classificar_risco(pontuacao):
     if pontuacao >= 70:
         return "Liberado"
@@ -123,14 +121,11 @@ def classificar_risco(pontuacao):
     else:
         return "Recusado"
 
-# Função para salvar o histórico de análises no arquivo CSV
 def salvar_historico(cliente, pontuacao, risco, motivos_positivos, motivos_negativos):
-    arquivo_csv = '/historico_analises.csv'  # Caminho absoluto do arquivo CSV
-    with open(arquivo_csv, mode='a', newline='') as file:
+    with open('historico_analises.csv', mode='a', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow([datetime.now(), cliente, pontuacao, risco, '; '.join(motivos_positivos), '; '.join(motivos_negativos)])
 
-# Rota principal para o formulário de análise de crédito
 @app.route('/', methods=['GET', 'POST'])
 def index():
     pontuacao = None
@@ -139,59 +134,53 @@ def index():
     motivos_negativos = None
 
     if request.method == 'POST':
-        # Obter dados do formulário
-        cliente = request.form['cliente']
-        data_abertura = request.form['data_abertura']
-        quantidade_socios = int(request.form['quantidade_socios'])
-        troca_socios = int(request.form['troca_socios']) == 1  # Convertendo para booleano
-        score_credito = int(request.form['score_credito'])
-        restricao_nome_socios = request.form['restricao_nome_socios'] == 'Sim'  # Convertendo para booleano
-        cheque_devolvido = request.form['cheque_devolvido'] == 'Sim'  # Convertendo para booleano
-        spc_serasa = request.form['spc_serasa'] == 'Sim'  # Convertendo para booleano
-        protesto = request.form['protesto'] == 'Sim'  # Convertendo para booleano
-        historico_faturamento = request.form['historico_faturamento'] == 'Sim'  # Convertendo para booleano
-        historico_atraso = request.form['historico_atraso'] == 'Sim'  # Convertendo para booleano
-        historico_compras = request.form['historico_compras'] == 'Sim'  # Convertendo para booleano
-        sugestao_limite = float(request.form['sugestao_limite'])
-        valor_compra_desejado = float(request.form['valor_compra_desejado'])
+        try:
+            # Obter dados do formulário
+            cliente = request.form['cliente']
+            data_abertura = request.form['data_abertura']
+            quantidade_socios = int(request.form['quantidade_socios'])
+            troca_socios = int(request.form['troca_socios']) == 1  # Convertendo para booleano
+            score_credito = int(request.form['score_credito'])
+            restricao_nome_socios = request.form['restricao_nome_socios'] == 'Sim'  # Convertendo para booleano
+            cheque_devolvido = request.form['cheque_devolvido'] == 'Sim'  # Convertendo para booleano
+            spc_serasa = request.form['spc_serasa'] == 'Sim'  # Convertendo para booleano
+            protesto = request.form['protesto'] == 'Sim'  # Convertendo para booleano
+            historico_faturamento = request.form['historico_faturamento'] == 'Sim'  # Convertendo para booleano
+            historico_atraso = request.form['historico_atraso'] == 'Sim'  # Convertendo para booleano
+            historico_compras = request.form['historico_compras'] == 'Sim'  # Convertendo para booleano
+            sugestao_limite = float(request.form['sugestao_limite'])
+            valor_compra_desejado = float(request.form['valor_compra_desejado'])
 
-        # Calcular pontuação e motivos
-        pontuacao, motivos_positivos, motivos_negativos = calcular_pontuacao(data_abertura, quantidade_socios, troca_socios, score_credito, restricao_nome_socios,
-                                                cheque_devolvido, spc_serasa, protesto, historico_faturamento, historico_atraso,
-                                                historico_compras, sugestao_limite, valor_compra_desejado)
+            # Calcular pontuação e motivos
+            pontuacao, motivos_positivos, motivos_negativos = calcular_pontuacao(data_abertura, quantidade_socios, troca_socios, score_credito, restricao_nome_socios,
+                                                    cheque_devolvido, spc_serasa, protesto, historico_faturamento, historico_atraso,
+                                                    historico_compras, sugestao_limite, valor_compra_desejado)
 
-        # Classificar risco
-        risco = classificar_risco(pontuacao)
+            # Classificar risco
+            risco = classificar_risco(pontuacao)
 
-        # Salvar histórico
-        salvar_historico(cliente, pontuacao, risco, motivos_positivos, motivos_negativos)
+            # Salvar histórico
+            salvar_historico(cliente, pontuacao, risco, motivos_positivos, motivos_negativos)
 
-    # Renderizar template com resultados
+        except Exception as e:
+            print(f"Erro ao processar o formulário: {e}")
+            # Pode-se adicionar um retorno de erro ou redirecionar para uma página de erro aqui
+
+    # Renderizar template com resultados ou formulário vazio
     return render_template('index.html', pontuacao=pontuacao, risco=risco, motivos_positivos=motivos_positivos, motivos_negativos=motivos_negativos)
 
 @app.route('/historico')
 def historico():
     historico = []
-    arquivo_csv = '/historico_analises.csv'  # Caminho absoluto do arquivo CSV
     try:
-        with open(arquivo_csv, mode='r', encoding='utf-16') as file:
+        with open('historico_analises.csv', mode='r', newline='', encoding='utf-8') as file:
             reader = csv.reader(file)
             for row in reader:
                 historico.append(row)
     except FileNotFoundError:
-        pass  # Se o arquivo não existir, retorna uma lista vazia
-    except UnicodeDecodeError:
-        # Se ocorrer erro de decodificação, tentar outra codificação
-        try:
-            with open(arquivo_csv, mode='r', encoding='latin-1') as file:
-                reader = csv.reader(file)
-                for row in reader:
-                    historico.append(row)
-        except Exception as e:
-            print(f"Erro ao ler arquivo CSV: {e}")
-    
+        pass
     return render_template('historico.html', historico=historico)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
+
