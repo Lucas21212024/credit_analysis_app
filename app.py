@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 from datetime import datetime
 import csv
 import os
@@ -142,7 +142,7 @@ def index():
     if request.method == 'POST':
         # Obter dados do formulário
         cliente = request.form['cliente']
-        cnpj = request.form['cnpj']  # Novo campo CNPJ
+        cnpj = request.form['cnpj']
         data_abertura = request.form['data_abertura']
         quantidade_socios = int(request.form['quantidade_socios'])
         troca_socios = int(request.form['troca_socios']) == 1  # Convertendo para booleano
