@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request
 from datetime import datetime
 import csv
-import os
 
 app = Flask(__name__)
 
@@ -126,7 +125,7 @@ def classificar_risco(pontuacao):
 
 # Função para salvar o histórico de análises no arquivo CSV
 def salvar_historico(cliente, pontuacao, risco, motivos_positivos, motivos_negativos):
-    arquivo_csv = os.path.join(os.getcwd(), 'historico_analises.csv')
+    arquivo_csv = '/historico_analises.csv'  # Caminho absoluto do arquivo CSV
     with open(arquivo_csv, mode='a', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([datetime.now(), cliente, pontuacao, risco, '; '.join(motivos_positivos), '; '.join(motivos_negativos)])
@@ -174,7 +173,7 @@ def index():
 @app.route('/historico')
 def historico():
     historico = []
-    arquivo_csv = os.path.join(os.getcwd(), 'historico_analises.csv')
+    arquivo_csv = '/historico_analises.csv'  # Caminho absoluto do arquivo CSV
     try:
         with open(arquivo_csv, mode='r') as file:
             reader = csv.reader(file)
