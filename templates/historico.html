@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,36 +9,64 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            background-color: #f4f4f4;
         }
+
+        .container {
+            width: 80%;
+            margin: auto;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
         }
-        table, th, td {
-            border: 1px solid #ccc;
-        }
-        th, td {
-            padding: 10px;
+
+        table th,
+        table td {
+            border: 1px solid #ddd;
+            padding: 12px;
             text-align: left;
+        }
+
+        table th {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        table tr:hover {
+            background-color: #ddd;
         }
     </style>
 </head>
+
 <body>
-    <h2>Histórico de Análises de Crédito</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Data</th>
-                <th>Cliente</th>
-                <th>CNPJ</th>
-                <th>Pontuação</th>
-                <th>Risco</th>
-                <th>Pontos Positivos</th>
-                <th>Pontos Negativos</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for analise in historico %}
+    <div class="container">
+        <h2>Histórico de Análises de Crédito</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Cliente</th>
+                    <th>Pontuação</th>
+                    <th>Status</th>
+                    <th>Pontos Positivos</th>
+                    <th>Pontos Negativos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for analise in historico %}
                 <tr>
                     <td>{{ analise[0] }}</td>
                     <td>{{ analise[1] }}</td>
@@ -45,10 +74,15 @@
                     <td>{{ analise[3] }}</td>
                     <td>{{ analise[4] }}</td>
                     <td>{{ analise[5] }}</td>
-                    <td>{{ analise[6] }}</td>
                 </tr>
-            {% endfor %}
-        </tbody>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+
+</html>
+
     </table>
 </body>
 </html>
