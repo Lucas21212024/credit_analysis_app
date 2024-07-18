@@ -151,21 +151,19 @@ def index():
                                                 historico_compras, sugestao_limite, valor_compra_desejado)
 
         risco = classificar_risco(pontuacao)
-        salvar_historico(cliente, cnpj, pontuacao, risco, motivos_positivos, motivos_negativos)
-
-    return render_template('index.html', pontuacao=pontuacao, risco=risco, motivos_positivos=motivos_positivos, motivos_negativos=motivos_negativos)
-
-@app.route('/historico')
-def historico():
+        def salvar_historico(cliente, cnpj, pontuacao, risco, motivos_positivos, motivos_negativos):
+    os.makedirs('data', exist_ok=True)
     file_path = os.path.join('data', 'historico_analises.csv')
-    historico = []
-    try:
-        with open(file_path, mode='r', newline='', encoding='utf-8') as file:
-            reader = csv.reader(file)
-            for row in reader:
-                historico.append(row)
-    except FileNotFoundError:
-        print(f"Arquivo não encontrado: {file_path}")
+
+    file_exists = os.path.isfile(file_path)
+
+    with open(file_path, mode='a', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        if not file_exists:
+            writer.writerow(["Data", "Cliente", "CNPJ", "Pontuação", "Risco", "Motivos Positivos", "Motivos Negativos"])
+        writer.writerow([datetime.now(), cliente, cnpj, pontuacao, risco, '; '.join(motivos_positivos), '; '.join(motivos_negativos)])
+    print(f"Dados salvos em: {file_path}")
+
     return render_template('historico.html', historico=historico)
 
 if __name__ == '__main__':
