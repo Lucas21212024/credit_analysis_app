@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Análises de Crédito</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        table th,
+        table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        table tr:hover {
+            background-color: #ddd;
+        }
+
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .new-consultation-button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            text-decoration: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .new-consultation-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Histórico de Análises de Crédito</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>CNPJ</th>
+                    <th>Cliente</th>
+                    <th>Pontuação</th>
+                    <th>Status</th>
+                    <th>Pontos Positivos</th>
+                    <th>Pontos Negativos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for analise in historico %}
+                <tr>
+                    <td>{{ analise[0] }}</td> <!-- Data -->
+                    <td>{{ analise[1] }}</td> <!-- CNPJ -->
+                    <td>{{ analise[2] }}</td> <!-- Cliente -->
+                    <td>{{ analise[3] }}</td> <!-- Pontuação -->
+                    <td>{{ analise[4] }}</td> <!-- Status -->
+                    <td>{{ analise[5] }}</td> <!-- Pontos Positivos -->
+                    <td>{{ analise[6] }}</td> <!-- Pontos Negativos -->
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="button-container">
+            <a href="/" class="new-consultation-button">Nova Consulta</a>
+        </div>
+    </div>
+</body>
+
+</html>
+
