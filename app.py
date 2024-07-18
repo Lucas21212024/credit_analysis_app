@@ -2,8 +2,12 @@ from flask import Flask, render_template, request
 from datetime import datetime
 import csv
 import os
+import logging
 
 app = Flask(__name__)
+
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
 
 def calcular_pontuacao(data_abertura, quantidade_socios, troca_socios, score_credito, restricao_nome_socios, cheque_devolvido, spc_serasa, protesto, historico_faturamento, historico_atraso, historico_compras, sugestao_limite, valor_compra_desejado):
     pontuacao = 0
@@ -52,75 +56,56 @@ def calcular_pontuacao(data_abertura, quantidade_socios, troca_socios, score_cre
     if restricao_nome_socios:
         pontuacao -= 10
         motivos_negativos.append("Restrição no nome dos sócios.")
-    else:
-        pontuacao += 5
-        motivos_positivos.append("Sem restrição no nome dos sócios.")
-
     if cheque_devolvido:
         pontuacao -= 10
         motivos_negativos.append("Cheque devolvido.")
-    else:
-        pontuacao += 5
-        motivos_positivos.append("Sem cheque devolvido.")
-
     if spc_serasa:
-        pontuacao -= 20
-        motivos_negativos.append("Restrição no SPC/Serasa.")
-    else:
-        pontuacao += 10
-        motivos_positivos.append("Sem restrição no SPC/Serasa.")
-
+        pontuacao -= 15
+        motivos_negativos.append("Restrições no SPC/Serasa.")
     if protesto:
         pontuacao -= 10
-        motivos_negativos.append("Protesto registrado.")
-    else:
-        pontuacao += 5
-        motivos_positivos.append("Sem protesto registrado.")
-
+        motivos_negativos.append("Protesto.")
     if historico_faturamento:
         pontuacao += 10
         motivos_positivos.append("Histórico de faturamento positivo.")
-
     if historico_atraso:
         pontuacao -= 10
-        motivos_negativos.append("Histórico de atraso.")
-    else:
-        pontuacao += 10
-        motivos_positivos.append("Sem histórico de atraso.")
-
+        motivos_negativos.append("Histórico de atrasos.")
     if historico_compras:
         pontuacao += 10
-        motivos_positivos.append("Histórico de compras conosco.")
-
-    if sugestao_limite < valor_compra_desejado:
+        motivos_positivos.append("Histórico de compras positivo.")
+    if valor_compra_desejado > sugestao_limite:
         pontuacao -= 10
-        motivos_negativos.append("Sugestão de limite menor que o valor de compra desejado.")
+        motivos_negativos.append("Valor de compra desejado maior que o limite sugerido.")
     else:
-        pontuacao += 10
-        motivos_positivos.append("Sugestão de limite maior ou igual ao valor de compra desejado.")
+        pontuacao += 5
+        motivos_positivos.append("Valor de compra desejado dentro do limite sugerido.")
 
     return pontuacao, motivos_positivos, motivos_negativos
 
 def classificar_risco(pontuacao):
-    if pontuacao >= 70:
-        return "Liberado"
-    elif 40 <= pontuacao < 70:
-        return "Requer revisão adicional"
+    if pontuacao <= 0:
+        return "Alto"
+    elif pontuacao <= 20:
+        return "Médio"
     else:
-        return "Recusado"
+        return "Baixo"
 
 def salvar_historico(cliente, cnpj, pontuacao, risco, motivos_positivos, motivos_negativos):
-    os.makedirs('data', exist_ok=True)
-    file_path = os.path.join('data', 'historico_analises.csv')
+    try:
+        os.makedirs('data', exist_ok=True)
+        file_path = os.path.join('data', 'historico_analises.csv')
 
-    file_exists = os.path.isfile(file_path)
+        file_exists = os.path.isfile(file_path)
 
-    with open(file_path, mode='a', newline='', encoding='utf-8') as file:
-        writer = csv.writer(file)
-        if not file_exists:
-            writer.writerow(["Data", "Cliente", "CNPJ", "Pontuação", "Risco", "Motivos Positivos", "Motivos Negativos"])
-        writer.writerow([datetime.now(), cliente, cnpj, pontuacao, risco, '; '.join(motivos_positivos), '; '.join(motivos_negativos)])
-    print(f"Dados salvos em: {file_path}")
+        with open(file_path, mode='a', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            if not file_exists:
+                writer.writerow(["Data", "Cliente", "CNPJ", "Pontuação", "Risco", "Motivos Positivos", "Motivos Negativos"])
+            writer.writerow([datetime.now(), cliente, cnpj, pontuacao, risco, '; '.join(motivos_positivos), '; '.join(motivos_negativos)])
+        logging.info(f"Dados salvos em: {file_path}")
+    except Exception as e:
+        logging.error(f"Erro ao salvar o histórico: {e}")
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -151,21 +136,22 @@ def index():
                                                 historico_compras, sugestao_limite, valor_compra_desejado)
 
         risco = classificar_risco(pontuacao)
-        def salvar_historico(cliente, cnpj, pontuacao, risco, motivos_positivos, motivos_negativos):
-    os.makedirs('data', exist_ok=True)
+        salvar_historico(cliente, cnpj, pontuacao, risco, motivos_positivos, motivos_negativos)
+
+    return render_template('index.html', pontuacao=pontuacao, risco=risco, motivos_positivos=motivos_positivos, motivos_negativos=motivos_negativos)
+
+@app.route('/historico')
+def historico():
     file_path = os.path.join('data', 'historico_analises.csv')
-
-    file_exists = os.path.isfile(file_path)
-
-    with open(file_path, mode='a', newline='', encoding='utf-8') as file:
-        writer = csv.writer(file)
-        if not file_exists:
-            writer.writerow(["Data", "Cliente", "CNPJ", "Pontuação", "Risco", "Motivos Positivos", "Motivos Negativos"])
-        writer.writerow([datetime.now(), cliente, cnpj, pontuacao, risco, '; '.join(motivos_positivos), '; '.join(motivos_negativos)])
-    print(f"Dados salvos em: {file_path}")
-
+    historico = []
+    try:
+        with open(file_path, mode='r', newline='', encoding='utf-8') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                historico.append(row)
+    except FileNotFoundError:
+        logging.error(f"Arquivo não encontrado: {file_path}")
     return render_template('historico.html', historico=historico)
 
 if __name__ == '__main__':
     app.run(debug=True)
-
