@@ -1,8 +1,8 @@
 from flask import Flask, render_template, request
 from datetime import datetime
-import csv
 import os
 import logging
+from models import HistoricoAnalise, session
 
 app = Flask(__name__)
 
@@ -93,19 +93,20 @@ def classificar_risco(pontuacao):
 
 def salvar_historico(cliente, cnpj, pontuacao, risco, motivos_positivos, motivos_negativos):
     try:
-        os.makedirs('data', exist_ok=True)
-        file_path = os.path.join('data', 'historico_analises.csv')
-
-        file_exists = os.path.isfile(file_path)
-
-        with open(file_path, mode='a', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            if not file_exists:
-                writer.writerow(["Data", "Cliente", "CNPJ", "Pontuação", "Risco", "Motivos Positivos", "Motivos Negativos"])
-            writer.writerow([datetime.now(), cliente, cnpj, pontuacao, risco, '; '.join(motivos_positivos), '; '.join(motivos_negativos)])
-        logging.info(f"Dados salvos em: {file_path}")
+        historico = HistoricoAnalise(
+            cliente=cliente,
+            cnpj=cnpj,
+            pontuacao=pontuacao,
+            risco=risco,
+            motivos_positivos='; '.join(motivos_positivos),
+            motivos_negativos='; '.join(motivos_negativos)
+        )
+        session.add(historico)
+        session.commit()
+        logging.info("Dados salvos no banco de dados")
     except Exception as e:
         logging.error(f"Erro ao salvar o histórico: {e}")
+        session.rollback()
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -142,15 +143,7 @@ def index():
 
 @app.route('/historico')
 def historico():
-    file_path = os.path.join('data', 'historico_analises.csv')
-    historico = []
-    try:
-        with open(file_path, mode='r', newline='', encoding='utf-8') as file:
-            reader = csv.reader(file)
-            for row in reader:
-                historico.append(row)
-    except FileNotFoundError:
-        logging.error(f"Arquivo não encontrado: {file_path}")
+    historico = session.query(HistoricoAnalise).all()
     return render_template('historico.html', historico=historico)
 
 if __name__ == '__main__':
